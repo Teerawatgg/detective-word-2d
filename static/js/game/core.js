@@ -84,7 +84,7 @@ const dom = {
   accuse: $("#accuse-open"), notebook: $("#notebook-open"), changeCase: $("#change-case"),
   thaiToggle: $("#thai-toggle"), soundToggle: $("#sound-toggle"), soundToggleGame: $("#sound-toggle-game"),
   // overlays
-  modalLayer: $("#modal-layer"), modalBody: $("#modal-body"), modalClose: $("#modal-close"),
+  modalLayer: $("#modal-layer"), modalWindow: $("#modal-layer .modal"), modalBody: $("#modal-body"), modalClose: $("#modal-close"),
   wordPopup: $("#word-popup"), toast: $("#toast")
 };
 const ctx = dom.canvas.getContext("2d");
@@ -114,6 +114,9 @@ function freshState() {
     chances: MAX_CHANCES,
     talkedOfficer: false,
     solved: false,
+    result: null,            // the CASE SOLVED numbers, worked out once (accusation.js)
+    wordsMet: new Map(),     // dictionary key -> the word as first read ("logged"), see wordreport.js
+    wordsLooked: new Set(),  // dictionary keys the player clicked
     nearest: null,           // NPC or clue the player can interact with right now
     modal: false             // a window is open, so movement is paused
   };

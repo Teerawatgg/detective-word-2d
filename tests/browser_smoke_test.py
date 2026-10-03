@@ -189,7 +189,27 @@ def solve_case(page, case_id, has_next):
     check(f"[{case_id}] the result shows stars and the confession",
           page.query_selector(".result-stars") is not None and page.query_selector(".confession") is not None)
     check(f"[{case_id}] 'Next case' only when a case follows", (page.query_selector("#next-case") is not None) == has_next)
+    word_report(page, case_id, has_next)
     close_window(page)
+
+
+def word_report(page, case_id, has_next):
+    """CASE SOLVED shows the words read in the case straight away, in Thai, with no extra click."""
+    cards = page.query_selector_all(".end-layout .word-report .word-card")
+    met = debug(page, "wordsMet()")
+    check(f"[{case_id}] Words shown on the result window: one card per word read",
+          len(cards) > 0 and len(cards) == len(met), f"{len(cards)} cards, {len(met)} met")
+    check(f"[{case_id}] Words are on screen without scrolling (desktop)",
+          page.evaluate("() => { const r = document.querySelector('.word-card').getBoundingClientRect();"
+                        " return r.top >= 0 && r.bottom <= window.innerHeight; }"))
+    thai = page.inner_text(".word-card .wc-th")
+    check(f"[{case_id}] Word cards show the Thai meaning", any("฀" <= c <= "๿" for c in thai), thai)
+    check(f"[{case_id}] One row per English question",
+          len(page.query_selector_all(".word-report .rq")) == page.evaluate("(id) => DW_CASES.find(c => c.id === id).questions.length", case_id))
+    looked = debug(page, "wordsLooked()")
+    page.click(".word-card .dw-word")
+    page.wait_for_selector("#word-popup:not(.hidden)", timeout=1500)
+    check(f"[{case_id}] A click on the result window is not counted as looked up", debug(page, "wordsLooked()") == looked)
 
 
 def quizzes(page):

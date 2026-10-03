@@ -11,7 +11,8 @@
    without giving the answer away. Losing every chance closes the case.
 
    Uses: core.js, modals.js, thai.js, dictionary.js, progress.js (stars),
-   case.js (shuffled lists, configureCase), audio.js (caseScene). */
+   case.js (shuffled lists, configureCase), audio.js (caseScene),
+   wordreport.js (noteWords, wordReportSection). */
 "use strict";
 
 function hearts(count) { return "♥".repeat(count) + "♡".repeat(MAX_CHANCES - count); }
@@ -55,6 +56,7 @@ function accuse() {
   const statements = $("#accuse-statements");
   document.querySelectorAll("#accuse-suspects input[name=suspect]").forEach((input) => input.addEventListener("change", () => {
     const npc = currentCase.npcs.find((n) => n.id === input.value);
+    noteWords(...npc.lines);
     statements.innerHTML = `<legend>2 · Which of ${esc(npc.name)}'s statements is false?</legend>` +
       npc.lines.map((line, i) => `<label class="radio"><input type="radio" name="lie" value="${i}"><span>“${linkify(line)}”${thBlock(thLine(npc.id, i))}</span></label>`).join("");
   }));
@@ -122,17 +124,29 @@ function showWrongAccusation(verdict) {
   $("#result-button").onclick = closeModal;
 }
 
+/* The stars and the best score are worked out ONCE per solved case and kept in
+   state.result, so the window can be drawn again (from the notebook, or after
+   a second correct accusation) without changing them. */
 function showSolved() {
   accusing = false;
   if (SND) SND.music(caseScene());
-  const criteria = starCriteria();
-  const stars = criteria.filter((item) => item.met).length;
-  const newBest = recordBest(stars, state.score);
+  if (!state.result) {
+    const criteria = starCriteria();
+    const stars = criteria.filter((item) => item.met).length;
+    state.result = { criteria, stars, newBest: recordBest(stars, state.score) };
+    noteWords(currentCase.confession, currentCase.solution);
+  }
+  renderSolved();
+}
+
+/* The result on the left, the words of the case on the right (wordreport.js). */
+function renderSolved() {
+  const { criteria, stars, newBest } = state.result;
   const culprit = currentCase.npcs.find((n) => n.id === currentCase.culpritId);
   const index = CASE_ORDER.findIndex((c) => c.id === currentCase.id);
   const nextCase = CASE_ORDER[index + 1];   // undefined after the last case
 
-  modal(`<div class="result">
+  modal(`<div class="end-layout"><div class="result">
     <div class="seal">CASE<br>SOLVED</div>
     <p class="eyebrow dark">MISSION COMPLETE</p>
     <div class="result-stars" aria-label="${stars} of 3 stars">${starText(stars)}</div>
@@ -149,7 +163,7 @@ function showSolved() {
       ${nextCase ? `<button id="next-case" class="light-button">Next case — new location</button>` : ""}
       <button id="result-button" class="primary-button small">Back to case select</button>
     </div>
-  </div>`);
+  </div>${wordReportSection()}</div>`, { wide: true });
   drawFace($("#culprit-face"), culprit.look);
 
   $("#result-button").onclick = () => dom.changeCase.click();
@@ -165,7 +179,7 @@ function showSolved() {
 }
 
 function outOfChances() {
-  modal(`<div class="result">
+  modal(`<div class="end-layout"><div class="result">
     <div class="seal fail">CASE<br>CLOSED</div>
     <p class="eyebrow dark">OUT OF CHANCES</p>
     <h2>Chief Rowan has taken you off the case.</h2>
@@ -174,7 +188,7 @@ function outOfChances() {
       <button id="restart-case" class="primary-button small">Restart this case</button>
       <button id="result-button" class="light-button">Back to case select</button>
     </div>
-  </div>`);
+  </div>${wordReportSection()}</div>`, { wide: true });
   $("#restart-case").onclick = () => { closeModal(); configureCase(); toast(`Case restarted at ${currentCase.location}`); };
   $("#result-button").onclick = () => dom.changeCase.click();
 }

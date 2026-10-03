@@ -5,8 +5,9 @@
    showWordPopup(el, w)  the popup: Thai meaning, verb forms, example sentence
    vocabLookup(text)     finds the dictionary entry for a word as written,
                          e.g. "logged" -> "log", "went" -> "go", "checked in" -> "check in"
+   vocabIn(text)         every dictionary entry in a text (for the word report)
 
-   Uses from core.js: VOCAB, IRREGULAR, SND, dom, esc. */
+   Uses from core.js: VOCAB, IRREGULAR, SND, dom, esc; wordreport.js (noteLookup). */
 "use strict";
 
 const PHRASE_MAX_WORDS = 3;   // longest phrase in the dictionary: "out of office"
@@ -82,18 +83,29 @@ function vocabLookup(text) {
    button charges points for. */
 function linkify(text, skipTerm) {
   const skip = skippedKeys(skipTerm);
+  return vocabPieces(text).map((piece) => (piece.hit && !skip.has(piece.hit.key)
+    ? `<span class="dw-word" data-word="${esc(piece.word)}">${esc(piece.original)}</span>`
+    : esc(piece.original))).join("");
+}
+
+/* The text cut into pieces that join back into it exactly:
+   { original, hit, word } — `hit` is the vocabLookup() result for a dictionary
+   word or phrase (null for gaps and unknown words), `word` the text looked up. */
+function vocabPieces(text) {
   const parts = String(text).split(/([A-Za-z][A-Za-z-]*)/);   // even index = gap, odd index = word
-  let html = "";
+  const pieces = [];
   for (let i = 0; i < parts.length; i++) {
-    if (i % 2 === 0) { html += esc(parts[i]); continue; }
+    if (i % 2 === 0) { pieces.push({ original: parts[i], hit: null, word: "" }); continue; }
     const match = longestMatchAt(parts, i);
-    const original = parts.slice(i, match.last + 1).join("");
-    html += match.hit && !skip.has(match.hit.key)
-      ? `<span class="dw-word" data-word="${esc(match.text)}">${esc(original)}</span>`
-      : esc(original);
+    pieces.push({ original: parts.slice(i, match.last + 1).join(""), hit: match.hit, word: match.text });
     i = match.last;
   }
-  return html;
+  return pieces;
+}
+
+/* Every dictionary entry in a text, as [{ key, word }] in reading order (repeats included). */
+function vocabIn(text) {
+  return vocabPieces(text).filter((piece) => piece.hit).map((piece) => ({ key: piece.hit.key, word: piece.word }));
 }
 
 /* The dictionary keys behind a quiz term: "last seen" -> {"see", …} */
@@ -245,6 +257,7 @@ document.addEventListener("click", (event) => {
   const wordEl = event.target.closest(".dw-word");
   if (!wordEl) { hideWordPopup(); return; }
   if (SND) SND.click();
+  noteLookup(wordEl);
   showWordPopup(wordEl, wordEl.dataset.word);
   event.stopPropagation();
 });

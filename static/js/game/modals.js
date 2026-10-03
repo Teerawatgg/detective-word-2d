@@ -7,16 +7,20 @@
    evidence(clue)               a clue; first time = +points and added to the notebook
    quiz(question)               the English question attached to a clue
    notebook()                   found clues + answered questions; the way to accuse
+                                (and, once the case is over, back to the result + words)
 
-   The accusation and result windows are in accusation.js.
+   The accusation and result windows are in accusation.js, the word report in wordreport.js.
    Uses: core.js, dictionary.js (linkify), thai.js (th*), audio.js (caseScene),
    case.js (quizView, updateHud). */
 "use strict";
 
 /* ---------- window plumbing ---------- */
-function modal(html) {
+/* `wide: true` for a window with a lot to lay out (the end of a case + its words). */
+function modal(html, { wide = false } = {}) {
   resetKeys();
   dom.modalBody.innerHTML = html;
+  dom.modalWindow.classList.toggle("wide", wide);
+  dom.modalWindow.scrollTop = 0;   // a new page starts at its top, not where the last one was scrolled to
   dom.modalLayer.classList.remove("hidden");
   state.modal = true;   // pauses movement
   hideWordPopup();
@@ -24,6 +28,7 @@ function modal(html) {
 
 function closeModal() {
   dom.modalLayer.classList.add("hidden");
+  dom.modalWindow.classList.remove("wide");
   dom.modalBody.innerHTML = "";
   state.modal = false;
   resetKeys();
@@ -65,6 +70,7 @@ function dialogue(npc, index = 0) {
     updateHud();
   }
   const isLast = index + 1 >= npc.lines.length;
+  noteWords(npc.lines[index]);
   modal(`
     <p class="eyebrow dark">${esc(npc.role)}</p>
     <div class="dialogue-head">
@@ -95,6 +101,7 @@ function evidence(clue) {
   const button = clue.question
     ? `<button id="ev-quiz" class="primary-button small">${state.answered[clue.question] ? "Review answer →" : "Answer English question →"}</button>`
     : `<button id="ev-close" class="primary-button small">Add to notebook</button>`;
+  noteWords(clue.text);
   modal(`
     <p class="eyebrow dark">EVIDENCE</p>
     <h2>${clue.icon} ${esc(clue.name)}</h2>
@@ -114,6 +121,7 @@ function quiz(question) {
   const actions = answer
     ? `<button id="quiz-close" class="primary-button small">Back to the case</button>`
     : `<button id="hint" class="light-button">Use a hint (${SCORE.hint})</button><button id="quiz-later" class="light-button">Answer later</button>`;
+  noteWords(question.prompt, answer ? question.explain : "");
   modal(`
     <p class="eyebrow dark">ENGLISH CHALLENGE <span class="topic-tag">${esc(TOPIC_LABEL[question.topic] || "")}</span></p>
     <h2 class="quiz-prompt">${linkify(question.prompt, question.term)}</h2>${thBlock(th.prompt, "prompt-th")}
@@ -183,10 +191,12 @@ function notebook(tab = "clues") {
     </div>
     <div class="note-list">${list}</div>
     <div class="modal-actions">
+      ${caseOver() ? `<button id="note-result" class="light-button">📖 Case result &amp; words</button>` : ""}
       <button id="note-accuse" class="danger-button" ${found < currentCase.minimumClues ? "disabled" : ""}>🚨 Accuse a Suspect</button>
     </div>`);
   document.querySelectorAll(".note-tab").forEach((button) => { button.onclick = () => notebook(button.dataset.tab); });
   $("#note-accuse").onclick = accuse;
+  if (caseOver()) $("#note-result").onclick = () => (state.solved ? renderSolved() : outOfChances());
 }
 
 function notebookClue(clue) {

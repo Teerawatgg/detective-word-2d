@@ -46,6 +46,8 @@ window.__DETECTIVE_DEBUG__ = {
   solved: () => state.solved,
   stars: () => starCriteria().filter((item) => item.met).length,
   accusing: () => accusing,
+  wordsMet: () => [...state.wordsMet.keys()],
+  wordsLooked: () => [...state.wordsLooked],
   discoverAll: () => { currentCase.clues.forEach((clue) => state.discovered.add(clue.id)); updateHud(); },
   lookup: (text) => { const hit = vocabLookup(text); return hit && { key: hit.key, form: hit.form }; },
   linkify: (text, skipTerm) => linkify(text, skipTerm),

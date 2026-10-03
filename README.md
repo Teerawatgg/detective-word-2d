@@ -15,6 +15,7 @@
 - **10 คดี 3 หมวด:** 🕵️ Detective English (4 คดี) · 💻 IT English (3 คดี) · 💼 Workplace English (3 คดี) ระดับ Beginner → Advanced
 - **Catch the Lie:** กล่าวหาด้วยการเลือก ผู้ต้องสงสัย + ประโยคเท็จ + หลักฐาน มีโอกาสผิด 3 ครั้ง
 - **ดิกชันนารีในเกม:** 405 คำ/วลี + 41 กริยาอปกติ จับรูปผันได้ (logged → log, went → go, checked in → check in) พร้อมตารางกริยาช่อง 1/2/3 และคำอธิบายภาษาไทย
+- **Word Report หลังจบคดี:** สรุปคำศัพท์ภาษาอังกฤษทุกคำที่ผู้เล่นได้อ่านในคดีนั้น พร้อมชนิดคำ คำแปลไทย รูปที่เจอจริง (เช่น read as "logged") คำที่กดดูความหมายจะขึ้นก่อนพร้อม 🔍 และสรุปผลคำถามภาษาอังกฤษแต่ละข้อ แสดงทันทีข้างผลคดีในหน้า CASE SOLVED / CASE CLOSED (ไม่ต้องกดปุ่ม) และเปิดซ้ำได้จาก Notebook หลังจบคดี
 - **ซับไตเติลไทย** ทุกบทพูด หลักฐาน คำถาม และเฉลย กด `T` เพื่อซ่อน
 - **ดาว ★★★ ต่อคดี:** ไขคดีได้ · ไม่กล่าวหาผิด · ตอบคำถามถูกทุกข้อโดยไม่ใช้ hint
 - **ระบบนำทาง:** objective tip, วงแหวนทองชี้เป้าหมาย, ลูกศร, minimap, ประตูเปิดอัตโนมัติ, ระบบไถลมุมกันติดผนัง
@@ -132,7 +133,7 @@ Detective Word 2D/
 │       │   └── characters.js       ตัวละครผู้เล่น + ชุดตำรวจ
 │       └── game/           ตัวเกม (แต่ละไฟล์ใช้ของไฟล์ที่โหลดก่อน)
 │           core.js · dictionary.js · audio.js · progress.js · thai.js
-│           modals.js · accusation.js · screens.js · case.js · world.js
+│           modals.js · accusation.js · wordreport.js · screens.js · case.js · world.js
 │           render.js · input.js · debug.js · main.js
 ├── tools/                  validator ข้อมูล (Python และ Node ใช้กฎชุดเดียวกัน)
 └── tests/                  เทสต์เบราว์เซอร์, jsdom, ประตู + screenshots

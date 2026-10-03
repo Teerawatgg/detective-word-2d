@@ -726,6 +726,7 @@ game/     ตัวเกม — แต่ละไฟล์ใช้ของ�
   thai.js        ซับไตเติลไทย
   modals.js      modal, dialogue, evidence, quiz, notebook
   accusation.js  Catch the lie, หน้าผลลัพธ์
+  wordreport.js  คำศัพท์ที่เจอในคดี + คำแปล (แสดงข้างผลคดีตอนจบ)
   screens.js     Start, How to Play, Briefing
   case.js        เริ่มคดี, สุ่มลำดับ, HUD
   world.js       การชน, ประตู, การเคลื่อนที่, findNearest

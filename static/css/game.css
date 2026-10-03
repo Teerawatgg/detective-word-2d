@@ -8,7 +8,7 @@
      5. How to Play
      6. Briefing
      7. Game screen              top bar, canvas + overlays, side panel
-     8. Windows (modals)         dialogue, evidence, quiz, notebook, accusation, result
+     8. Windows (modals)         dialogue, evidence, quiz, notebook, accusation, result, word report
      9. Thai subtitles
     10. Click-to-translate popup
     11. Audio panel, toast, error box
@@ -440,6 +440,7 @@ h2.quiz-prompt { font-family: var(--font-body); font-weight: 600; font-size: 20p
 
 /* result: CASE SOLVED / TRY AGAIN / CASE CLOSED */
 .result { text-align: center; }
+.result .modal-actions { justify-content: center; }
 .seal {   /* a round rubber stamp */
   width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 14px;
   display: flex; align-items: center; justify-content: center;
@@ -465,6 +466,58 @@ h2.quiz-prompt { font-family: var(--font-body); font-weight: 600; font-size: 20p
 .result-stats div { display: flex; flex-direction: column; align-items: center; }
 .result-stats span { font-size: 10px; color: rgba(28,26,20,0.5); }
 .result-stats strong { font-size: 18px; }
+
+/* the end of a case: result on the left, its words on the right (game/wordreport.js) */
+.modal.wide { max-width: 1060px; }
+.end-layout { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 26px; align-items: start; }
+.word-report { padding-left: 26px; border-left: 2px dashed rgba(11,19,43,0.14); }
+.word-report h2 { font-size: 24px; margin-bottom: 4px; }
+.report-intro { font-size: 13.5px; margin: 0 0 14px; color: rgba(28,26,20,0.75); }
+.report-intro span { display: block; font-size: 12.5px; color: rgba(28,26,20,0.55); }
+.report-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 6px; }
+.report-chips div {
+  display: flex; flex-direction: column; align-items: center; padding: 10px 6px 8px; border-radius: 12px;
+  background: var(--navy-case); color: var(--paper); text-align: center;
+}
+.report-chips strong { font-family: var(--font-display); font-size: 26px; line-height: 1.1; }
+.report-chips span { font-family: var(--font-ui); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.8; }
+.report-chips small { font-size: 11px; opacity: 0.6; }
+.report-chips .gold strong { color: var(--solved-gold); }
+.report-chips .green strong { color: #8fd3a8; }
+.report-heading {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin: 18px 0 8px; padding-bottom: 6px;
+  font-size: 16px; border-bottom: 2px solid rgba(11,19,43,0.12);
+}
+.report-heading small { font-family: var(--font-body); font-size: 12px; font-weight: 400; color: rgba(28,26,20,0.55); }
+
+.report-quiz { display: flex; flex-direction: column; gap: 6px; }
+.rq {
+  display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; font-size: 13px;
+  background: #fffdf7; border: 1px solid rgba(11,19,43,0.12); border-left-width: 4px; border-radius: 10px;
+}
+.rq.ok { border-left-color: var(--ok-green); }
+.rq.bad { border-left-color: var(--evidence-red); }
+.rq p { margin: 2px 0 0; }
+.rq-mark {
+  flex: none; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; color: #fff; background: rgba(28,26,20,0.3);
+}
+.rq.ok .rq-mark { background: var(--ok-green); }
+.rq.bad .rq-mark { background: var(--evidence-red); }
+
+.word-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.word-card {
+  position: relative; padding: 10px 12px; border-radius: 10px;
+  background: #fffdf7; border: 1px solid rgba(11,19,43,0.12);
+}
+.word-card.looked { border-color: rgba(212,167,44,0.7); background: rgba(212,167,44,0.12); }
+.wc-top { display: flex; align-items: baseline; gap: 6px; padding-right: 22px; }
+.word-card .wc-word { font-family: var(--font-display); font-size: 16px; color: var(--navy-deep); }
+.wc-pos { font-family: var(--font-ui); font-size: 10.5px; letter-spacing: 0.04em; color: rgba(28,26,20,0.5); }
+.wc-badge { position: absolute; top: 8px; right: 10px; font-size: 13px; }
+.wc-th { margin-top: 3px; font-size: 14px; line-height: 1.45; color: var(--ink); }
+.word-report .muted { color: rgba(28,26,20,0.55); }
+.wc-seen { margin-top: 3px; font-size: 11.5px; font-style: italic; color: rgba(28,26,20,0.5); }
 
 /* ===================== 9. Thai subtitles =====================
    A small, faded Thai line under English text. .dw-th is a <span> (so it is
@@ -563,6 +616,8 @@ body.th-off .dw-th { display: none; }
   .how-to-shell { grid-template-columns: 1fr; }
   .briefing-shell { flex-direction: column; align-items: center; }
   .briefing-portrait { width: 160px; height: 174px; }
+  .end-layout { grid-template-columns: 1fr; }
+  .word-report { padding: 22px 0 0; border-left: none; border-top: 2px dashed rgba(11,19,43,0.14); }
 }
 /* Phones: touch buttons replace the keyboard help. */
 @media (max-width: 640px) {
@@ -581,4 +636,11 @@ body.th-off .dw-th { display: none; }
   .mobile-pad button[data-dir="down"] { grid-column: 2; grid-row: 2; margin-top: 58px; }
   .help { display: none; }
   .character-picker { grid-template-columns: 1fr 1fr; }
+  .report-chips { gap: 6px; }
+  .report-chips strong { font-size: 21px; }
+  .report-chips span { font-size: 9.5px; letter-spacing: 0.06em; }
+  .word-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 420px) {
+  .word-grid { grid-template-columns: 1fr; }
 }

@@ -20,7 +20,9 @@ function hearts(count) { return "♥".repeat(count) + "♡".repeat(MAX_CHANCES -
 /* ---------- the form ---------- */
 function accuse() {
   if (state.discovered.size < currentCase.minimumClues) { toast(`You need at least ${currentCase.minimumClues} clues first.`); return; }
-  if (state.chances <= 0 && !state.solved) { outOfChances(); return; }
+  // once the case is over there is nothing left to accuse: show how it ended
+  if (state.solved) { renderSolved(); return; }
+  if (state.chances <= 0) { outOfChances(); return; }
 
   const suspects = shuffledSuspects.length ? shuffledSuspects : currentCase.npcs.filter((n) => n.role === "Suspect");
   const foundClues = (shuffledProofs.length ? shuffledProofs : currentCase.clues).filter((clue) => state.discovered.has(clue.id));
@@ -70,11 +72,11 @@ function accuse() {
       return;
     }
     const verdict = judge(choice);
-    if (verdict.ok && !state.solved) {
+    if (verdict.ok) {
       state.score += SCORE.caseSolved;
       state.solved = true;
       if (SND) SND.fanfare();
-    } else if (!verdict.ok && !state.solved) {
+    } else {
       state.chances -= 1;
       state.score = Math.max(0, state.score + SCORE.wrongAccusation);
       state.wrong += 1;
@@ -96,17 +98,18 @@ function judge({ suspect, lie, proof }) {
 }
 
 /* ---------- result windows ---------- */
-function statsBlock() {
+/* `stats`: the live state, or the snapshot in state.result for a solved case. */
+function statsBlock(stats = state) {
   return `<div class="result-stats">
-    <div><span>SCORE</span><strong>${state.score}</strong></div>
-    <div><span>WRONG</span><strong>${state.wrong}</strong></div>
-    <div><span>HINTS</span><strong>${state.hints}</strong></div>
+    <div><span>SCORE</span><strong>${stats.score}</strong></div>
+    <div><span>WRONG</span><strong>${stats.wrong}</strong></div>
+    <div><span>HINTS</span><strong>${stats.hints}</strong></div>
   </div>`;
 }
 
 /* Says WHY it failed, without naming the answer. */
 function showWrongAccusation(verdict) {
-  if (state.chances <= 0 && !state.solved) { outOfChances(); return; }
+  if (state.chances <= 0) { outOfChances(); return; }
   const name = esc((currentCase.npcs.find((n) => n.id === verdict.suspect) || {}).name || "That suspect");
   let reason;
   if (!verdict.suspectOk) reason = `The evidence does not show that ${name} lied. Look for a statement that clashes with a time or a place in your clues.`;
@@ -124,16 +127,21 @@ function showWrongAccusation(verdict) {
   $("#result-button").onclick = closeModal;
 }
 
-/* The stars and the best score are worked out ONCE per solved case and kept in
-   state.result, so the window can be drawn again (from the notebook, or after
-   a second correct accusation) without changing them. */
+/* The result is a snapshot of the moment the case was solved, kept in
+   state.result: the stars, the best score, the stats and the quiz answers.
+   Quizzes can still be answered after that, but the window drawn again from
+   the notebook shows the same numbers, so the stars always match them. */
 function showSolved() {
   accusing = false;
   if (SND) SND.music(caseScene());
   if (!state.result) {
     const criteria = starCriteria();
     const stars = criteria.filter((item) => item.met).length;
-    state.result = { criteria, stars, newBest: recordBest(stars, state.score) };
+    state.result = {
+      criteria, stars, newBest: recordBest(stars, state.score),
+      score: state.score, wrong: state.wrong, hints: state.hints,
+      answered: { ...state.answered }
+    };
     noteWords(currentCase.confession, currentCase.solution);
   }
   renderSolved();
@@ -141,7 +149,7 @@ function showSolved() {
 
 /* The result on the left, the words of the case on the right (wordreport.js). */
 function renderSolved() {
-  const { criteria, stars, newBest } = state.result;
+  const { criteria, stars, newBest, answered } = state.result;
   const culprit = currentCase.npcs.find((n) => n.id === currentCase.culpritId);
   const index = CASE_ORDER.findIndex((c) => c.id === currentCase.id);
   const nextCase = CASE_ORDER[index + 1];   // undefined after the last case
@@ -157,13 +165,13 @@ function renderSolved() {
     </div>
     <p>${esc(currentCase.solution)}${thBlock(thSolution())}</p>
     <ul class="star-list">${criteria.map((item) => `<li class="${item.met ? "met" : ""}">${item.met ? "★" : "☆"} ${esc(item.label)}</li>`).join("")}</ul>
-    ${statsBlock()}
+    ${statsBlock(state.result)}
     <div class="modal-actions">
       ${stars < 3 ? `<button id="replay-case" class="light-button">Replay for ★★★</button>` : ""}
       ${nextCase ? `<button id="next-case" class="light-button">Next case — new location</button>` : ""}
       <button id="result-button" class="primary-button small">Back to case select</button>
     </div>
-  </div>${wordReportSection()}</div>`, { wide: true });
+  </div>${wordReportSection(answered)}</div>`, { wide: true });
   drawFace($("#culprit-face"), culprit.look);
 
   $("#result-button").onclick = () => dom.changeCase.click();

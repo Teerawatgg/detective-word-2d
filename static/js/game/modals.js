@@ -121,7 +121,9 @@ function quiz(question) {
   const actions = answer
     ? `<button id="quiz-close" class="primary-button small">Back to the case</button>`
     : `<button id="hint" class="light-button">Use a hint (${SCORE.hint})</button><button id="quiz-later" class="light-button">Answer later</button>`;
-  noteWords(question.prompt, answer ? question.explain : "");
+  // the tested term only counts as "met" once answered (same rule as linkify's skipTerm)
+  if (answer) noteWords(question.prompt, question.explain);
+  else noteWordsExcept(skippedKeys(question.term), question.prompt);
   modal(`
     <p class="eyebrow dark">ENGLISH CHALLENGE <span class="topic-tag">${esc(TOPIC_LABEL[question.topic] || "")}</span></p>
     <h2 class="quiz-prompt">${linkify(question.prompt, question.term)}</h2>${thBlock(th.prompt, "prompt-th")}
@@ -191,12 +193,13 @@ function notebook(tab = "clues") {
     </div>
     <div class="note-list">${list}</div>
     <div class="modal-actions">
-      ${caseOver() ? `<button id="note-result" class="light-button">📖 Case result &amp; words</button>` : ""}
-      <button id="note-accuse" class="danger-button" ${found < currentCase.minimumClues ? "disabled" : ""}>🚨 Accuse a Suspect</button>
+      ${caseOver()
+        ? `<button id="note-result" class="primary-button small">📖 Case result &amp; words</button>`
+        : `<button id="note-accuse" class="danger-button" ${found < currentCase.minimumClues ? "disabled" : ""}>🚨 Accuse a Suspect</button>`}
     </div>`);
   document.querySelectorAll(".note-tab").forEach((button) => { button.onclick = () => notebook(button.dataset.tab); });
-  $("#note-accuse").onclick = accuse;
-  if (caseOver()) $("#note-result").onclick = () => (state.solved ? renderSolved() : outOfChances());
+  // after the case, accuse() itself shows how it ended (accusation.js)
+  ($("#note-accuse") || $("#note-result")).onclick = accuse;
 }
 
 function notebookClue(clue) {

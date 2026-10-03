@@ -18,6 +18,9 @@ import sys
 from playwright.sync_api import TimeoutError as PlaywrightTimeout
 from playwright.sync_api import sync_playwright
 
+# Test names contain Thai; a Windows console (cp1252) cannot print it otherwise.
+sys.stdout.reconfigure(encoding="utf-8")
+
 BASE = "http://127.0.0.1:5000"
 FAILS = []
 
@@ -210,6 +213,34 @@ def word_report(page, case_id, has_next):
     page.click(".word-card .dw-word")
     page.wait_for_selector("#word-popup:not(.hidden)", timeout=1500)
     check(f"[{case_id}] A click on the result window is not counted as looked up", debug(page, "wordsLooked()") == looked)
+
+    # after the case: the tip points to the notebook, and Accuse shows the result instead of the form
+    check(f"[{case_id}] The tip says the case is solved", "Notebook" in page.inner_text("#objective-tip"), page.inner_text("#objective-tip"))
+    close_window(page)
+    page.click("#accuse-open")
+    wait_for_window(page)
+    check(f"[{case_id}] Accuse after solving shows the result, not the form",
+          page.query_selector("#accuse-form") is None and page.query_selector(".end-layout .seal") is not None)
+    close_window(page)
+    page.keyboard.press("KeyQ")
+    wait_for_window(page)
+    check(f"[{case_id}] Notebook after solving: result button, no accuse button",
+          page.query_selector("#note-result") is not None and page.query_selector("#note-accuse") is None)
+    page.click("#note-result")
+    page.wait_for_selector(".end-layout", timeout=1500)
+
+
+def quiz_term_not_in_report(page):
+    """An unanswered quiz must not put its tested word in the word report (that would give the answer away)."""
+    debug(page, "goToCase('missing-laptop')")
+    debug(page, "openQuiz('q2')")   # "Jenny 'signed in' at the library…", term "sign in"
+    tested = page.evaluate("() => [...skippedKeys('sign in')]")
+    met = debug(page, "wordsMet()")
+    check("An unanswered quiz term is not counted as met", met and not set(tested) & set(met), f"tested {tested}, met {met}")
+    page.click(f".quiz-choice[data-i='{debug(page, 'quizCorrectIndex', 'q2')}']")
+    page.wait_for_timeout(150)
+    check("Once answered, the quiz term is counted as met", set(tested) & set(debug(page, "wordsMet()")), str(debug(page, "wordsMet()")))
+    close_window(page, "#quiz-close")
 
 
 def quizzes(page):
@@ -425,7 +456,7 @@ def save_screenshots(page):
 
 STEPS = [
     start_screen, how_to_play, briefing, movement, first_conversation,
-    solve_every_case, quizzes, thai_subtitles, layout, leaving_a_case_stops_music,
+    solve_every_case, quiz_term_not_in_report, quizzes, thai_subtitles, layout, leaving_a_case_stops_music,
     notebook_and_wrong_accusation, dictionary_rules, word_popups, sound_toggle,
 ]
 

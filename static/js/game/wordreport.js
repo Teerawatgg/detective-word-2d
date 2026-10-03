@@ -8,9 +8,10 @@
    with how the English questions went.
 
    noteWords(...texts)    remember the dictionary words in texts now on screen
+   noteWordsExcept(skip, ...texts)  the same, leaving out the keys in `skip`
    noteLookup(wordEl)     remember a clicked word (dictionary.js)
-   wordReportSection()    the report as HTML, shown straight away beside the
-                          result in the CASE SOLVED / CASE CLOSED window
+   wordReportSection(answered)  the report as HTML, shown straight away beside
+                          the result in the CASE SOLVED / CASE CLOSED window
    caseOver()             true once the case is solved or out of chances
 
    Kept in memory only, in state (core.js), so a new case or a replay starts
@@ -21,11 +22,15 @@
 
 function caseOver() { return state.solved || state.chances <= 0; }
 
-function noteWords(...texts) {
+function noteWords(...texts) { noteWordsExcept(new Set(), ...texts); }
+
+/* Like noteWords, but leaves out the dictionary keys in `skip`: the term an
+   unanswered quiz is testing, so the report cannot give its answer away. */
+function noteWordsExcept(skip, ...texts) {
   if (!gameActive) return;   // e.g. the briefing, read before any case
   texts.filter(Boolean).forEach((text) => {
     vocabIn(text).forEach(({ key, word }) => {
-      if (!state.wordsMet.has(key)) state.wordsMet.set(key, word);
+      if (!skip.has(key) && !state.wordsMet.has(key)) state.wordsMet.set(key, word);
     });
   });
 }
@@ -42,11 +47,12 @@ function noteLookup(wordEl) {
 
 /* ---------- the report ---------- */
 
-/* The right-hand side of the CASE SOLVED / CASE CLOSED window (accusation.js). */
-function wordReportSection() {
+/* The right-hand side of the CASE SOLVED / CASE CLOSED window (accusation.js).
+   `answered`: question id -> { ok }; a solved case passes its snapshot (state.result). */
+function wordReportSection(answered = state.answered) {
   const words = reportWords();
   const looked = words.filter((item) => item.looked).length;
-  const right = currentCase.questions.filter((q) => state.answered[q.id]?.ok).length;
+  const right = currentCase.questions.filter((q) => answered[q.id]?.ok).length;
 
   return `<section class="word-report">
     <p class="eyebrow dark">CASE DEBRIEF</p>
@@ -66,7 +72,7 @@ function wordReportSection() {
       : `<p class="muted">No dictionary words were read in this case.</p>`}
 
     <h3 class="report-heading">English questions <small lang="th">คำถามภาษาอังกฤษ</small></h3>
-    <div class="report-quiz">${currentCase.questions.map(reportQuestion).join("")}</div>
+    <div class="report-quiz">${currentCase.questions.map((q) => reportQuestion(q, answered[q.id])).join("")}</div>
   </section>`;
 }
 
@@ -93,8 +99,7 @@ function wordCard({ key, word, entry, looked }) {
 
 /* One question: right / wrong / not answered. An unanswered question keeps
    its explanation hidden, so a restart can still be played fair. */
-function reportQuestion(question) {
-  const answer = state.answered[question.id];
+function reportQuestion(question, answer) {
   const status = !answer ? "skip" : answer.ok ? "ok" : "bad";
   const label = { ok: "✓", bad: "✗", skip: "–" }[status];
   const body = answer

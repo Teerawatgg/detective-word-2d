@@ -110,9 +110,11 @@ function updateObjectiveTip() {
   if (!dom.objectiveTip) return;
   const found = state.discovered.size, needed = currentCase.minimumClues;
   let tip;
-  if (!state.talkedOfficer) tip = "Find the police officer and press E to talk.";
+  // the end of the case first: it can come before the officer was ever talked to
+  if (state.solved) tip = "Case solved! Open Notebook to see the result and the words of this case.";
+  else if (state.chances <= 0) tip = "Out of chances. Open Notebook to see the result and the words, or restart the case.";
+  else if (!state.talkedOfficer) tip = "Find the police officer and press E to talk.";
   else if (found < needed) tip = `Explore the rooms and collect clues (${found}/${needed} found).`;
-  else if (!state.solved) tip = `Enough evidence! Compare each suspect's statements with your clues, then accuse — ${state.chances} chance${state.chances === 1 ? "" : "s"} left.`;
-  else tip = "Case solved! Open Notebook to continue.";
+  else tip = `Enough evidence! Compare each suspect's statements with your clues, then accuse — ${state.chances} chance${state.chances === 1 ? "" : "s"} left.`;
   dom.objectiveTip.textContent = tip;
 }

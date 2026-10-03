@@ -1,0 +1,15 @@
+{
+  "name": "detective-word-2d",
+  "version": "7.2.0",
+  "private": true,
+  "description": "Validators and headless tests for Detective Word 2D (Flask build). The Python runner (tools/validate_data.py) needs no Node.",
+  "scripts": {
+    "validate": "node tools/validate_data.js",
+    "test:doors": "node tests/door_walk_test.js",
+    "test:dom": "node tests/dom_smoke_test.js",
+    "test": "npm run validate && npm run test:doors && npm run test:dom"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}

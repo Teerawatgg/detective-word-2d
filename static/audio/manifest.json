@@ -1,0 +1,5 @@
+{
+  "_comment": "Every key is optional. Missing files fall back to the built-in synthesiser in sound.js. Paths are relative to /static/audio/.",
+  "music": {},
+  "sfx": {}
+}

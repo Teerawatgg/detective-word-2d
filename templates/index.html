@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detective Word 2D</title>
+  <link rel="icon" href="data:,">
+
+  <!-- Fonts: Yeseva One (headings), Vollkorn (reading text), Oswald (UI), Taviraj (Thai) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Yeseva+One&family=Oswald:wght@400;500;600;700&family=Vollkorn:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Taviraj:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+</head>
+<body>
+
+  <!-- ============================== START SCREEN ============================== -->
+  <section id="start-screen" class="screen start-screen">
+    <div class="audio-cluster">
+      <button id="sound-toggle" class="sound-toggle" type="button" aria-label="Toggle sound">🔊</button>
+      <button id="audio-settings" class="sound-toggle" type="button" aria-label="Audio settings">⚙</button>
+    </div>
+
+    <div class="start-shell">
+      <div class="intro">
+        <p class="eyebrow">2D ENGLISH DETECTIVE SIMULATION</p>
+        <h1>Detective <span>Word</span></h1>
+        <p class="intro-copy">Solve short mystery cases in English. Explore each scene, question every witness, and click any underlined word for an instant Thai translation while you investigate.</p>
+        <button id="how-to-open" class="intro-secondary how-to-main" type="button">How to Play <span>→</span></button>
+      </div>
+
+      <form id="start-form" class="paper-card">
+        <div class="form-heading">
+          <p class="eyebrow dark">NEW CASE</p>
+          <h2>Create Your Detective</h2>
+        </div>
+
+        <label for="player-name">Your name</label>
+        <input id="player-name" maxlength="24" placeholder="Enter a detective name" autocomplete="off" required>
+
+        <label>Choose your character</label>
+        <div id="character-picker" class="character-picker"></div>   <!-- filled by game/screens.js -->
+
+        <label for="case-select">Choose a case</label>
+        <select id="case-select" required></select>                  <!-- grouped by category -->
+        <div id="case-preview" class="case-preview"></div>
+
+        <button class="primary-button" type="submit">Start Investigation <span>→</span></button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============================== HOW TO PLAY ============================== -->
+  <section id="how-to-screen" class="screen how-to-screen hidden">
+    <div class="how-to-header">
+      <div>
+        <p class="eyebrow">DETECTIVE TRAINING</p>
+        <h1>How to Play</h1>
+      </div>
+      <button id="how-to-back" class="how-to-back" type="button">← Back to Start</button>
+    </div>
+
+    <div class="how-to-shell">
+      <section class="guide-panel">
+        <h2>Controls</h2>
+        <div class="control-list">
+          <div class="control-row">
+            <div class="arrow-keys"><kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span></div>
+            <p><strong>Move around</strong><small>Arrow keys or W A S D — works with any keyboard layout</small></p>
+          </div>
+          <div class="control-row">
+            <kbd class="big-key">E</kbd>
+            <p><strong>Talk / Inspect</strong><small>Use it near a person or a piece of evidence</small></p>
+          </div>
+          <div class="control-row">
+            <kbd class="big-key">Q</kbd>
+            <p><strong>Open Notebook</strong><small>Review evidence and answered questions</small></p>
+          </div>
+          <div class="control-row">
+            <kbd class="big-key">Esc</kbd>
+            <p><strong>Close window</strong><small>Return to exploring</small></p>
+          </div>
+          <div class="control-row">
+            <kbd class="big-key">T</kbd>
+            <p><strong>Thai subtitles on / off</strong><small>Every English line is printed with a small Thai translation underneath — turn it off to test yourself</small></p>
+          </div>
+          <div class="control-row">
+            <span class="click-icon">🖱️</span>
+            <p><strong>Click underlined words</strong><small>See the Thai meaning and an example sentence</small></p>
+          </div>
+        </div>
+
+        <div class="goal-card">
+          <h3>Detective's Goal</h3>
+          <ol>
+            <li>Find and read every clue written in English</li>
+            <li>Answer the short questions to check your understanding</li>
+            <li>Catch the lie: choose the suspect, the statement that is false, and the evidence that proves it — you have 3 chances</li>
+            <li>Earn up to ★★★ per case: no wrong accusations, and every English question right without hints</li>
+          </ol>
+        </div>
+        <button id="replay-briefing" class="light-button" type="button">▶ Replay Chief Rowan's Briefing</button>
+      </section>
+
+      <section class="case-guide-panel">
+        <div class="case-guide-heading">
+          <div>
+            <p class="eyebrow">CASE FILES</p>
+            <h2>Choose a Case</h2>
+          </div>
+          <span>Select a card to return to setup with that case ready</span>
+        </div>
+        <div id="how-to-cases" class="how-to-cases"></div>   <!-- one card per case -->
+      </section>
+    </div>
+  </section>
+
+  <!-- ============================== BRIEFING ==============================
+       Chief Rowan's introduction, shown once per player before the first case. -->
+  <section id="briefing-screen" class="screen briefing-screen hidden">
+    <div class="briefing-shell">
+      <canvas id="briefing-portrait" class="briefing-portrait" width="220" height="240"></canvas>
+      <div class="briefing-box">
+        <p id="briefing-speaker" class="eyebrow dark"></p>
+        <p id="briefing-text" class="briefing-text"></p>
+        <div class="briefing-footer">
+          <span id="briefing-page" class="briefing-page"></span>
+          <div class="briefing-actions">
+            <button id="briefing-skip" class="light-button" type="button">Skip</button>
+            <button id="briefing-next" class="primary-button small" type="button">Continue <span>→</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== GAME SCREEN ============================== -->
+  <section id="game-screen" class="screen game-screen hidden">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-logo">DW</span>
+        <div><strong>Detective Word</strong><small id="header-case-title"></small></div>
+      </div>
+
+      <div class="stats">
+        <div><span>CLUES</span><strong id="clue-count">0/0</strong></div>
+        <div><span>QUIZZES</span><strong id="quiz-count">0/0</strong></div>
+        <div><span>SCORE</span><strong id="score">0</strong></div>
+        <div title="Wrong accusations left"><span>CHANCES</span><strong id="chances" class="chances">♥♥♥</strong></div>
+      </div>
+
+      <div class="top-actions">
+        <button id="sound-toggle-game" class="top-button icon-only" type="button" aria-label="Toggle sound">🔊</button>
+        <button id="audio-settings-game" class="top-button icon-only" type="button" aria-label="Audio settings">⚙</button>
+        <button id="thai-toggle" class="top-button" type="button" aria-pressed="true" title="Hide the Thai subtitles (T)">ไทย ON</button>
+        <button id="notebook-open" class="top-button" type="button">📓 Notebook <kbd>Q</kbd></button>
+      </div>
+    </header>
+
+    <main class="game-layout">
+      <div class="canvas-stage">
+        <section class="canvas-wrap">
+          <canvas id="game" width="960" height="600" tabindex="0"></canvas>
+          <div id="interact-prompt" class="interact-prompt hidden"><kbd>E</kbd><span id="interact-label">Interact</span></div>
+          <div id="objective-tip" class="objective-tip"></div>
+          <div class="help">
+            <span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> move</span>
+            <span><kbd>E</kbd> interact</span>
+            <span><kbd>Q</kbd> notebook</span>
+            <span><kbd>M</kbd> mute</span>
+            <span><kbd>T</kbd> Thai on/off</span>
+            <span>Follow the gold ⌄ marker</span>
+          </div>
+          <!-- touch controls, shown on small screens only -->
+          <div class="mobile-pad">
+            <button data-dir="up">▲</button>
+            <button data-dir="left">◀</button>
+            <button data-action="interact">E</button>
+            <button data-dir="right">▶</button>
+            <button data-dir="down">▼</button>
+          </div>
+        </section>
+      </div>
+
+      <aside class="case-panel">
+        <p class="eyebrow dark">ACTIVE CASE</p>
+        <h2 id="panel-case-title"></h2>
+        <span id="difficulty-badge" class="difficulty-badge"></span>
+        <p id="location-name" class="location-name"></p>
+        <p id="panel-description"></p>
+
+        <div class="minimap-card">
+          <strong>Map</strong>
+          <canvas id="minimap" width="252" height="168"></canvas>
+          <div class="minimap-legend">
+            <span><i class="pin gold"></i>Clue</span>
+            <span><i class="pin green"></i>Found</span>
+            <span><i class="pin blue"></i>Officer</span>
+            <span><i class="pin red"></i>You</span>
+          </div>
+        </div>
+
+        <div class="objectives">
+          <strong>Objectives</strong>
+          <ol>
+            <li id="obj-officer">Talk to the officer</li>
+            <li id="obj-clues">Find enough clues</li>
+            <li id="obj-accuse">Arrest the right suspect</li>
+          </ol>
+        </div>
+
+        <div class="player-card">
+          <canvas id="portrait" width="64" height="76"></canvas>
+          <div><small>DETECTIVE</small><strong id="detective-name"></strong><span>Rookie Investigator</span></div>
+        </div>
+
+        <button id="accuse-open" class="danger-button" type="button" disabled>🚨 Accuse a Suspect</button>
+        <button id="change-case" class="secondary-button" type="button">Change Case</button>
+      </aside>
+    </main>
+  </section>
+
+  <!-- ============================== OVERLAYS ============================== -->
+  <!-- every dialogue, clue, quiz, notebook and accusation window is drawn into #modal-body -->
+  <div id="modal-layer" class="modal-layer hidden">
+    <section class="modal">
+      <button id="modal-close" class="modal-close" type="button">×</button>
+      <div id="modal-body"></div>
+    </section>
+  </div>
+
+  <div id="audio-panel" class="audio-panel hidden">
+    <header><strong>Audio</strong><button id="audio-panel-close" type="button">×</button></header>
+    <label>Master <input type="range" id="vol-master" min="0" max="100"></label>
+    <label>Music <input type="range" id="vol-music" min="0" max="100"></label>
+    <label>Sound effects <input type="range" id="vol-sfx" min="0" max="100"></label>
+    <label>Ambience <input type="range" id="vol-ambience" min="0" max="100"></label>
+    <small>Press <kbd>M</kbd> in game to mute instantly.</small>
+  </div>
+
+  <div id="word-popup" class="word-popup hidden"></div>   <!-- click-to-translate -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- ============================== SCRIPTS ==============================
+       Plain scripts, loaded in this order. No build step.
+       engine/  reusable pieces that know nothing about the cases
+       data/    content only: cases, vocabulary, Thai text (edit these to add content)
+       game/    the game itself; each file builds on the ones above it -->
+  <script src="{{ url_for('static', filename='js/engine/mapkit.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/engine/sprites.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/engine/sound.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='js/data/vocab.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/data/thai-dialogue.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/data/thai-content.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/data/briefing.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/data/characters.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/data/cases-detective.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/data/cases-it.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/data/cases-work.js') }}"></script>
+
+  <script src="{{ url_for('static', filename='js/game/core.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/dictionary.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/audio.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/progress.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/thai.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/modals.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/accusation.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/screens.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/case.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/world.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/render.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/input.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/debug.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/game/main.js') }}"></script>
+</body>
+</html>

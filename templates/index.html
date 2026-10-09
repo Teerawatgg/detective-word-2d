@@ -6,10 +6,10 @@
   <title>Detective Word 2D</title>
   <link rel="icon" href="data:,">
 
-  <!-- Fonts: Yeseva One (headings), Vollkorn (reading text), Oswald (UI), Taviraj (Thai) -->
+  <!-- Fonts: Prompt (everything, English and Thai); Yeseva One, Vollkorn, Oswald and Taviraj only for .classic-fonts (start intro, How to Play) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Yeseva+One&family=Oswald:wght@400;500;600;700&family=Vollkorn:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Taviraj:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Yeseva+One&family=Oswald:wght@400;500;600;700&family=Vollkorn:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Taviraj:wght@400;500;600;700&family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
 </head>
@@ -23,7 +23,7 @@
     </div>
 
     <div class="start-shell">
-      <div class="intro">
+      <div class="intro classic-fonts">
         <p class="eyebrow">2D ENGLISH DETECTIVE SIMULATION</p>
         <h1>Detective <span>Word</span></h1>
         <p class="intro-copy">Solve short mystery cases in English. Explore each scene, question every witness, and click any underlined word for an instant Thai translation while you investigate.</p>
@@ -53,7 +53,7 @@
 
   <!-- ============================== HOW TO PLAY ============================== -->
   <section id="how-to-screen" class="screen how-to-screen hidden">
-    <div class="how-to-header">
+    <div class="how-to-header classic-fonts">
       <div>
         <p class="eyebrow">DETECTIVE TRAINING</p>
         <h1>How to Play</h1>
@@ -62,32 +62,58 @@
     </div>
 
     <div class="how-to-shell">
-      <section class="guide-panel">
+      <section class="guide-panel classic-fonts">
         <h2>Controls</h2>
+        <!-- keyboard rows on computers; touch rows on phones and tablets (section 13 of game.css) -->
         <div class="control-list">
-          <div class="control-row">
+          <div class="control-row keys-only">
             <div class="arrow-keys"><kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span></div>
             <p><strong>Move around</strong><small>Arrow keys or W A S D — works with any keyboard layout</small></p>
           </div>
-          <div class="control-row">
+          <div class="control-row keys-only">
             <kbd class="big-key">E</kbd>
             <p><strong>Talk / Inspect</strong><small>Use it near a person or a piece of evidence</small></p>
           </div>
-          <div class="control-row">
+          <div class="control-row keys-only">
             <kbd class="big-key">Q</kbd>
             <p><strong>Open Notebook</strong><small>Review evidence and answered questions</small></p>
           </div>
-          <div class="control-row">
+          <div class="control-row keys-only">
             <kbd class="big-key">Esc</kbd>
             <p><strong>Close window</strong><small>Return to exploring</small></p>
           </div>
-          <div class="control-row">
+          <div class="control-row keys-only">
             <kbd class="big-key">T</kbd>
-            <p><strong>Thai subtitles on / off</strong><small>Every English line is printed with a small Thai translation underneath — turn it off to test yourself</small></p>
+            <p><strong>Thai subtitles on / off</strong><small>Starts off so you read in English first — turn it on to see a small Thai translation under every English line</small></p>
           </div>
-          <div class="control-row">
+          <div class="control-row keys-only">
             <span class="click-icon">🖱️</span>
             <p><strong>Click underlined words</strong><small>See the Thai meaning and an example sentence</small></p>
+          </div>
+
+          <div class="control-row touch-only">
+            <span class="guide-icon guide-dpad">✥</span>
+            <p><strong>Move around</strong><small>Hold the round pad and slide your thumb — the corners walk diagonally</small></p>
+          </div>
+          <div class="control-row touch-only">
+            <span class="guide-icon guide-e">E</span>
+            <p><strong>Talk / Inspect</strong><small>Tap the red E button (or the "E" bubble) near a person or a piece of evidence</small></p>
+          </div>
+          <div class="control-row touch-only">
+            <span class="guide-icon">📓</span>
+            <p><strong>Open Notebook</strong><small>Review evidence and answered questions</small></p>
+          </div>
+          <div class="control-row touch-only">
+            <span class="guide-icon">📋</span>
+            <p><strong>Case panel</strong><small>On a phone, tap "Case" at the top for the map, objectives and the Accuse button</small></p>
+          </div>
+          <div class="control-row touch-only">
+            <span class="guide-icon guide-text">ไทย</span>
+            <p><strong>Thai subtitles on / off</strong><small>Starts off so you read in English first — tap ไทย OFF at the top to turn them on</small></p>
+          </div>
+          <div class="control-row touch-only">
+            <span class="guide-icon">👆</span>
+            <p><strong>Tap underlined words</strong><small>See the Thai meaning and an example sentence</small></p>
           </div>
         </div>
 
@@ -153,41 +179,51 @@
       <div class="top-actions">
         <button id="sound-toggle-game" class="top-button icon-only" type="button" aria-label="Toggle sound">🔊</button>
         <button id="audio-settings-game" class="top-button icon-only" type="button" aria-label="Audio settings">⚙</button>
-        <button id="thai-toggle" class="top-button" type="button" aria-pressed="true" title="Hide the Thai subtitles (T)">ไทย ON</button>
-        <button id="notebook-open" class="top-button" type="button">📓 Notebook <kbd>Q</kbd></button>
+        <button id="thai-toggle" class="top-button" type="button" aria-pressed="false" title="Show the Thai subtitles (T)">ไทย OFF</button>
+        <button id="notebook-open" class="top-button" type="button">Notebook <kbd>Q</kbd></button>
+        <button id="panel-toggle" class="top-button panel-toggle" type="button" aria-label="Show the case panel" aria-expanded="false">📋 Case</button>
       </div>
     </header>
 
     <main class="game-layout">
+      <aside class="help">
+        <strong>Controls</strong>
+        <ul class="help-keys">
+          <li><span class="keys"><kbd>WASD</kbd><kbd>↑↓ ← →</kbd></span>Move</li>
+          <li><span class="keys"><kbd>E</kbd></span>Interact</li>
+          <li><span class="keys"><kbd>Q</kbd></span>Notebook</li>
+          <li><span class="keys"><kbd>M</kbd></span>Mute</li>
+          <li><span class="keys"><kbd>T</kbd></span>Thai on/off</li>
+        </ul>
+      </aside>
+
       <div class="canvas-stage">
         <section class="canvas-wrap">
           <canvas id="game" width="960" height="600" tabindex="0"></canvas>
           <div id="interact-prompt" class="interact-prompt hidden"><kbd>E</kbd><span id="interact-label">Interact</span></div>
           <div id="objective-tip" class="objective-tip"></div>
-          <div class="help">
-            <span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> move</span>
-            <span><kbd>E</kbd> interact</span>
-            <span><kbd>Q</kbd> notebook</span>
-            <span><kbd>M</kbd> mute</span>
-            <span><kbd>T</kbd> Thai on/off</span>
-            <span>Follow the gold ⌄ marker</span>
-          </div>
-          <!-- touch controls, shown on small screens only -->
-          <div class="mobile-pad">
-            <button data-dir="up">▲</button>
-            <button data-dir="left">◀</button>
-            <button data-action="interact">E</button>
-            <button data-dir="right">▶</button>
-            <button data-dir="down">▼</button>
-          </div>
         </section>
       </div>
 
+      <!-- touch controls: phones and tablets (any screen whose main input is touch) -->
+      <div class="touch-controls">
+        <div class="dpad" role="group" aria-label="Move: hold and slide">
+          <i class="up">▲</i><i class="left">◀</i><i class="right">▶</i><i class="down">▼</i>
+        </div>
+        <div class="touch-actions">
+          <button class="touch-btn touch-notebook" data-action="notebook" type="button" aria-label="Notebook"><b>📓</b><small>Notebook</small></button>
+          <button class="touch-btn touch-interact" data-action="interact" type="button" aria-label="Talk or inspect"><b>E</b><small>Talk</small></button>
+        </div>
+      </div>
+
       <aside class="case-panel">
+        <button id="panel-close" class="panel-close" type="button" aria-label="Close the case panel">×</button>
         <p class="eyebrow dark">ACTIVE CASE</p>
         <h2 id="panel-case-title"></h2>
-        <span id="difficulty-badge" class="difficulty-badge"></span>
-        <p id="location-name" class="location-name"></p>
+        <div class="case-meta">
+          <span id="difficulty-badge" class="difficulty-badge"></span>
+          <p id="location-name" class="location-name"></p>
+        </div>
         <p id="panel-description"></p>
 
         <div class="minimap-card">
@@ -219,6 +255,7 @@
         <button id="change-case" class="secondary-button" type="button">Change Case</button>
       </aside>
     </main>
+    <div class="panel-backdrop"></div>   <!-- phones: dims the map while the case panel is open -->
   </section>
 
   <!-- ============================== OVERLAYS ============================== -->
@@ -236,7 +273,8 @@
     <label>Music <input type="range" id="vol-music" min="0" max="100"></label>
     <label>Sound effects <input type="range" id="vol-sfx" min="0" max="100"></label>
     <label>Ambience <input type="range" id="vol-ambience" min="0" max="100"></label>
-    <small>Press <kbd>M</kbd> in game to mute instantly.</small>
+    <small class="keys-only">Press <kbd>M</kbd> in game to mute instantly.</small>
+    <small class="touch-only">Tap 🔊 at the top to mute instantly.</small>
   </div>
 
   <div id="word-popup" class="word-popup hidden"></div>   <!-- click-to-translate -->

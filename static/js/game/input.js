@@ -1,4 +1,4 @@
-/* input.js — keyboard, touch buttons and page visibility.
+/* input.js — keyboard, touch controls (D-pad, E, Notebook, case drawer) and page visibility.
 
    Keys are read by event.code (the physical key), not event.key (the
    character), so WASD works with a Thai or any other keyboard layout.
@@ -62,13 +62,57 @@ addEventListener("keyup", (event) => {
 document.addEventListener("focusin", (event) => { if (isTypingTarget(event.target)) resetKeys(); });
 addEventListener("blur", resetKeys);
 
-/* ---------- touch buttons (small screens) ---------- */
-document.querySelectorAll("[data-dir]").forEach((button) => {
-  const direction = button.dataset.dir;
-  button.onpointerdown = (event) => { event.preventDefault(); keys[direction] = true; };
-  ["onpointerup", "onpointercancel", "onpointerleave"].forEach((name) => { button[name] = () => { keys[direction] = false; }; });
+/* ---------- touch controls (phones and tablets) ----------
+   The D-pad is one surface, not four buttons: the direction comes from where
+   the finger is relative to its centre, so sliding the thumb turns without
+   lifting it, and the corners between two arrows walk diagonally. */
+const DPAD_SECTORS = {   // 45° slices, 0 = right, clockwise (screen y points down)
+  "0": ["right"], "1": ["right", "down"], "2": ["down"], "3": ["down", "left"],
+  "4": ["left"], "-4": ["left"], "-3": ["left", "up"], "-2": ["up"], "-1": ["up", "right"]
+};
+const dpad = $(".dpad");
+let dpadPointer = null;
+
+function steerDpad(event) {
+  const box = dpad.getBoundingClientRect();
+  const dx = event.clientX - (box.left + box.width / 2);
+  const dy = event.clientY - (box.top + box.height / 2);
+  resetKeys();
+  let directions = [];
+  if (Math.hypot(dx, dy) > box.width * 0.12) {   // a small dead zone in the middle
+    directions = DPAD_SECTORS[String(Math.round(Math.atan2(dy, dx) / (Math.PI / 4)))];
+    directions.forEach((direction) => { keys[direction] = true; });
+  }
+  dpad.dataset.dir = directions.join(" ");   // lights up the arrows in CSS
+}
+function releaseDpad(event) {
+  if (event.pointerId !== dpadPointer) return;
+  dpadPointer = null;
+  resetKeys();
+  dpad.dataset.dir = "";
+}
+dpad.addEventListener("pointerdown", (event) => {
+  event.preventDefault();
+  dpadPointer = event.pointerId;
+  dpad.setPointerCapture(event.pointerId);   // keep steering even if the thumb slides off the pad
+  steerDpad(event);
 });
-$("[data-action=interact]").onclick = interact;
+dpad.addEventListener("pointermove", (event) => { if (event.pointerId === dpadPointer) steerDpad(event); });
+["pointerup", "pointercancel", "lostpointercapture"].forEach((name) => dpad.addEventListener(name, releaseDpad));
+
+$(".touch-interact").onclick = () => { if (gameActive) interact(); };
+$(".touch-notebook").onclick = () => dom.notebook.onclick();
+dom.prompt.onclick = () => { if (gameActive) interact(); };   // the "E Interact" bubble can be tapped too
+
+/* ---------- case panel drawer (phones) ---------- */
+function setPanelOpen(open) {
+  document.body.classList.toggle("panel-open", open);
+  $("#panel-toggle").setAttribute("aria-expanded", String(open));
+}
+$("#panel-toggle").onclick = () => setPanelOpen(!document.body.classList.contains("panel-open"));
+$(".panel-backdrop").onclick = () => setPanelOpen(false);
+// any button in the panel (×, Accuse, Change Case) also closes the drawer
+document.querySelectorAll(".case-panel button").forEach((button) => button.addEventListener("click", () => setPanelOpen(false)));
 
 /* ---------- top bar buttons ---------- */
 dom.notebook.onclick = () => {

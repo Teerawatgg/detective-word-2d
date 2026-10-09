@@ -27,7 +27,7 @@ function drawMap() {
     ctx.fillStyle = zone.floor;
     ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
     ctx.fillStyle = "#30374477";
-    ctx.font = "500 13px 'Oswald', 'Arial Narrow', sans-serif";
+    ctx.font = "500 12px 'Prompt', sans-serif";
     ctx.textAlign = "left";
     ctx.fillText(zone.label, zone.x + 12, zone.y + 22);
   });
@@ -150,7 +150,7 @@ function drawClue(clue) {
 
 function drawNameTag(x, y, name, isPlayer) {
   if (!name) return;
-  ctx.font = "500 13px 'Oswald', 'Arial Narrow', sans-serif";
+  ctx.font = "500 12px 'Prompt', sans-serif";
   ctx.textAlign = "center";
   const width = ctx.measureText(name).width + 12;
   ctx.fillStyle = isPlayer ? "#b23a48d9" : "#111a2ed9";
@@ -246,7 +246,7 @@ function drawRoomBanner() {
   const alpha = Math.min(1, remaining / 450) * Math.min(1, (ROOM_BANNER_MS - remaining) / 220 + 0.2);
   ctx.save();
   ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-  ctx.font = "24px 'Yeseva One', Georgia, serif";
+  ctx.font = "600 22px 'Prompt', sans-serif";
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   const width = ctx.measureText(roomBannerText).width + 44;
   const x = dom.canvas.width / 2, y = 46;

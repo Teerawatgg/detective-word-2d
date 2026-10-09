@@ -12,7 +12,8 @@
      9. Thai subtitles
     10. Click-to-translate popup
     11. Audio panel, toast, error box
-    12. Responsive               (must stay last: it overrides the rules above)
+    12. Responsive               (must come after 1–11: it overrides them)
+    13. Touch screens            phones and tablets: D-pad, layouts, case drawer (last of all)
 */
 
 /* ===================== 1. Design tokens ===================== */
@@ -27,15 +28,25 @@
   --solved-gold: #d4a72c;
   --ok-green: #4c9a6a;
 
-  /* Yeseva One: headings · Vollkorn: reading text (clues read like a case file)
-     · Oswald: labels, buttons, HUD. None of them has Thai, so each stack ends
-     with Taviraj, a looped Thai serif that is clear at small sizes. */
-  --font-display: "Yeseva One", "Taviraj", Georgia, serif;
-  --font-body: "Vollkorn", "Taviraj", Georgia, serif;
-  --font-ui: "Oswald", "Taviraj", "Arial Narrow", sans-serif;
+  /* Prompt everywhere: one sans-serif that covers both English and Thai.
+     The start-screen intro and the How to Play controls keep the original
+     case-file fonts (see .classic-fonts below). */
+  --font-display: "Prompt", sans-serif;
+  --font-body: "Prompt", sans-serif;
+  --font-ui: "Prompt", sans-serif;
 
   --radius: 14px;
   --shadow-lg: 0 24px 60px rgba(11, 19, 43, 0.45);
+}
+
+/* The original fonts, kept for the start-screen intro and How to Play.
+   Yeseva One: headings · Vollkorn: reading text · Oswald: labels and keys.
+   None of them has Thai, so each stack ends with Taviraj. */
+.classic-fonts {
+  --font-display: "Yeseva One", "Taviraj", Georgia, serif;
+  --font-body: "Vollkorn", "Taviraj", Georgia, serif;
+  --font-ui: "Oswald", "Taviraj", "Arial Narrow", sans-serif;
+  font-family: var(--font-body);
 }
 
 /* ===================== 2. Base elements ===================== */
@@ -44,7 +55,7 @@ html, body { height: 100%; }
 body {
   margin: 0;
   font-family: var(--font-body);
-  font-synthesis: none;                 /* Yeseva One has one weight: never fake a bold */
+  font-synthesis: none;                 /* never fake a bold or italic */
   font-variant-numeric: lining-nums;    /* Vollkorn's default old-style figures make 1 look like ɪ, 0 like o */
   color: var(--ink);
   background: var(--navy-deep);
@@ -285,11 +296,11 @@ kbd {
 /* ---------- map area + side panel ---------- */
 .game-layout {
   flex: 1 1 auto; min-height: 0; padding: 14px 18px; gap: 14px;
-  display: grid; grid-template-columns: minmax(0, 1fr) 300px;
+  display: grid; grid-template-columns: 196px minmax(0, 1fr) 300px;
 }
 /* The stage centres the canvas in the space left over. .canvas-wrap keeps
-   the canvas's 960×600 shape, so the overlays (objective tip, prompt, help
-   bar) stay on the picture instead of floating in the empty margins. */
+   the canvas's 960×600 shape, so the overlays (objective tip, interact
+   prompt) stay on the picture instead of floating in the empty margins. */
 .canvas-stage { min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
 .canvas-wrap {
   position: relative; aspect-ratio: 960 / 600; height: 100%; width: auto; max-width: 100%; max-height: 100%;
@@ -298,6 +309,16 @@ kbd {
 #game {
   display: block; width: 100%; height: 100%; max-width: 100%; max-height: 100%;
   object-fit: contain; image-rendering: pixelated;
+}
+/* Fit whichever side runs out first (the stage can be too narrow as well as
+   too short): size the wrap from the stage's own width and height. Only where
+   the stage has a fixed height to measure: the three-column desktop layout,
+   and touch screens held sideways (section 13). */
+@media (min-width: 1025px), (hover: none) and (pointer: coarse) and (orientation: landscape) {
+@supports (width: 1cqw) {
+  .canvas-stage { container-type: size; }
+  .canvas-wrap { height: auto; width: min(100cqw, 100cqh * 960 / 600); }
+}
 }
 @supports not (aspect-ratio: 1) {
   .canvas-wrap { height: auto; width: 100%; }   /* old browsers: let width lead */
@@ -310,17 +331,29 @@ kbd {
   font-size: 12.5px; font-weight: 700; text-align: center; box-shadow: 0 6px 16px rgba(0,0,0,0.3);
 }
 .interact-prompt {
-  position: absolute; bottom: 66px; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px;
   background: rgba(11,19,43,0.88); color: var(--paper); font-size: 13px; font-weight: 600;
   box-shadow: 0 6px 16px rgba(0,0,0,0.35);
 }
+
+/* ---------- left column: keyboard controls ---------- */
 .help {
-  position: absolute; bottom: 10px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 10px;
-  font-size: 11px; color: rgba(243,236,218,0.6);
+  align-self: start; background: var(--paper); border-radius: var(--radius); padding: 14px 16px 8px;
+  box-shadow: var(--shadow-lg);
 }
-.help span { display: flex; gap: 4px; align-items: center; }
-.mobile-pad { display: none; }   /* shown in the small-screen rules below */
+.help > strong {
+  display: block; margin-bottom: 6px;
+  font-family: var(--font-ui); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(28,26,20,0.65);
+}
+.help-keys { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; font-size: 13.5px; font-weight: 600; color: var(--navy-deep); }
+.help-keys li { display: flex; align-items: center; gap: 9px; white-space: nowrap; padding: 6px 0; }
+.help-keys li + li { border-top: 1px solid rgba(11,19,43,0.09); }
+.help-keys .keys { display: inline-flex; gap: 4px; }
+.help-keys kbd {
+  font-size: 11.5px; line-height: 1; min-width: 26px; padding: 5px 7px; text-align: center;
+  border-radius: 6px; box-shadow: 0 2px 0 rgba(0,0,0,0.35);
+}
 
 /* ---------- side panel ----------
    It never scrolls: it is as tall as the map area, every block keeps its
@@ -338,6 +371,7 @@ kbd {
   background: var(--navy-case); color: var(--paper);
   font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
 }
+.case-meta { display: contents; }   /* tall screens: badge and location stack as panel items */
 .location-name { font-size: 12px; color: rgba(28,26,20,0.55); }
 #panel-description {   /* cut to 3 lines; the full text is in its tooltip and on the start screen */
   font-size: 13px; line-height: 1.5; color: rgba(28,26,20,0.78);
@@ -603,38 +637,49 @@ body.th-off .dw-th { display: none; }
   .player-card { padding: 6px 10px; }
   .player-card canvas { width: 44px; height: 52px; }
   .case-panel .danger-button, .case-panel .secondary-button { padding: 9px; }
+  .case-meta { display: flex; align-items: center; gap: 10px; }   /* badge and location share a line */
+  .help { padding: 12px 14px 6px; }
+  .help-keys li { padding: 5px 0; }
+}
+/* Shorter still (e.g. 125% zoom): drop the description so the minimap keeps its room */
+@media (max-height: 740px) {
+  #panel-description { display: none; }
 }
 @media (max-height: 680px) {
   #panel-description, .minimap-legend { display: none; }
 }
-@media (max-width: 1024px) {
-  .game-layout { grid-template-columns: 1fr; }
-  .case-panel { order: -1; }
+/* Narrow windows on a computer (mouse/trackpad, not touch): one column with
+   the map first, and the page scrolls instead of squeezing the case panel.
+   601–1024px also gets the two-column case panel of section 13 (tablet,
+   portrait). Touch screens use section 13 only. */
+@media (max-width: 1024px) and (hover: hover), (max-width: 1024px) and (pointer: fine) {
+  .game-layout { grid-template-columns: minmax(0, 1fr); align-content: start; overflow-y: auto; }
+  .canvas-stage { min-height: auto; }
+  .canvas-wrap { width: 100%; height: auto; max-height: none; }
+  .case-panel { order: 2; overflow: visible; min-height: auto; }   /* full height: the page scrolls instead */
+  #minimap { max-height: 220px; }
+  /* the controls become a single row under the map */
+  .help { order: 1; align-self: stretch; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 10px 14px; }
+  .help > strong { margin: 0; }
+  .help-keys { flex-direction: row; flex-wrap: wrap; gap: 8px 16px; }
+  .help-keys li { gap: 6px; padding: 0; }
+  .help-keys li + li { border-top: none; }
 }
 @media (max-width: 860px) {
-  .start-shell { grid-template-columns: 1fr; }
-  .how-to-shell { grid-template-columns: 1fr; }
+  /* minmax(0, 1fr), not 1fr: a long <select> option must not widen the page past the screen */
+  .start-shell { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .how-to-shell { grid-template-columns: minmax(0, 1fr); }
+  .paper-card input, .paper-card select { width: 100%; min-width: 0; }
   .briefing-shell { flex-direction: column; align-items: center; }
   .briefing-portrait { width: 160px; height: 174px; }
   .end-layout { grid-template-columns: 1fr; }
   .word-report { padding: 22px 0 0; border-left: none; border-top: 2px dashed rgba(11,19,43,0.14); }
 }
-/* Phones: touch buttons replace the keyboard help. */
 @media (max-width: 640px) {
-  .mobile-pad {
-    display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 56px);
-    gap: 6px; position: absolute; bottom: 76px; right: 12px; justify-items: center; align-items: center;
-  }
-  .mobile-pad button {
-    width: 52px; height: 52px; border-radius: 12px; font-size: 16px;
-    background: rgba(11,19,43,0.55); color: #fff; border: 1px solid rgba(255,255,255,0.2);
-  }
-  .mobile-pad button[data-dir="up"] { grid-column: 2; grid-row: 1; }
-  .mobile-pad button[data-dir="left"] { grid-column: 1; grid-row: 2; }
-  .mobile-pad button[data-action="interact"] { grid-column: 2; grid-row: 2; background: var(--evidence-red); }
-  .mobile-pad button[data-dir="right"] { grid-column: 3; grid-row: 2; }
-  .mobile-pad button[data-dir="down"] { grid-column: 2; grid-row: 2; margin-top: 58px; }
+  .start-screen { padding-top: 84px; }   /* clear the round sound buttons in the corner */
   .help { display: none; }
+  .modal-layer { padding: 10px; }
+  .modal { padding: 20px 18px; max-height: 92vh; max-height: 92dvh; }
   .character-picker { grid-template-columns: 1fr 1fr; }
   .report-chips { gap: 6px; }
   .report-chips strong { font-size: 21px; }
@@ -643,4 +688,223 @@ body.th-off .dw-th { display: none; }
 }
 @media (max-width: 420px) {
   .word-grid { grid-template-columns: 1fr; }
+}
+
+/* ===================== 13. Touch screens =====================
+   Any screen whose main input is a finger (phones AND tablets such as the
+   iPad) plays the same way: a D-pad and an E button replace the keyboard
+   help, and the Notebook gets its own big button. Layouts:
+     tablet, landscape   map + controls on the left, case panel on the right
+     tablet, portrait    map, controls, then a compact case panel
+     phone,  portrait    map, controls; case panel in a drawer (📋 Case)
+     phone,  landscape   D-pad | map | buttons; case panel in the drawer
+   "Phone" = touch and (max-width: 600px) or (max-height: 500px). */
+.touch-controls, .panel-toggle, .panel-close, .panel-backdrop, .control-row.touch-only, .audio-panel .touch-only { display: none; }
+
+/* How to Play: round icons for the touch rows */
+.guide-icon {
+  flex: none; width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  background: var(--navy-case); color: var(--paper); box-shadow: 0 2px 0 rgba(0,0,0,0.35);
+}
+.guide-dpad { font-size: 24px; }
+.guide-e { background: var(--evidence-red); font-family: var(--font-ui); font-weight: 700; }
+.guide-text { font-family: "Prompt", sans-serif; font-size: 12px; font-weight: 600; }
+
+.touch-controls {
+  align-items: center; justify-content: space-between; gap: 16px;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.dpad {
+  --size: 150px;
+  position: relative; flex: none; width: var(--size); height: var(--size); border-radius: 50%;
+  background: radial-gradient(circle, rgba(243,236,218,0.14) 0 22%, rgba(243,236,218,0.06) 23% 100%);
+  border: 1.5px solid rgba(243,236,218,0.24);
+  box-shadow: inset 0 2px 14px rgba(0,0,0,0.4), 0 10px 26px rgba(0,0,0,0.35);
+  touch-action: none;   /* the finger steers; it must never scroll or zoom the page */
+}
+.dpad i {
+  position: absolute; width: 32%; height: 32%; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-style: normal; font-size: calc(var(--size) * 0.12); color: rgba(243,236,218,0.7);
+  transition: background 0.08s ease, color 0.08s ease; pointer-events: none;
+}
+.dpad .up    { top: 4%;    left: 34%; }
+.dpad .down  { bottom: 4%; left: 34%; }
+.dpad .left  { left: 4%;   top: 34%; }
+.dpad .right { right: 4%;  top: 34%; }
+.dpad[data-dir~="up"] .up, .dpad[data-dir~="down"] .down,
+.dpad[data-dir~="left"] .left, .dpad[data-dir~="right"] .right {
+  background: var(--solved-gold); color: var(--navy-deep);
+}
+
+.touch-actions { display: flex; align-items: center; gap: 14px; }
+.touch-btn {
+  flex: none; border-radius: 50%; color: #fff; touch-action: manipulation;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+.touch-btn b { font-size: 30px; line-height: 1; }
+.touch-btn small { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 3px; opacity: 0.9; }
+.touch-interact {
+  width: 98px; height: 98px; background: var(--evidence-red);
+  border: 2px solid rgba(255,255,255,0.28); box-shadow: 0 6px 0 #7a2230, 0 12px 26px rgba(0,0,0,0.4);
+}
+.touch-interact:active { transform: translateY(4px); box-shadow: 0 2px 0 #7a2230, 0 6px 14px rgba(0,0,0,0.4); }
+.touch-notebook {
+  width: 70px; height: 70px; background: rgba(243,236,218,0.12);
+  border: 1.5px solid rgba(243,236,218,0.3); box-shadow: 0 4px 0 rgba(0,0,0,0.35);
+}
+.touch-notebook b { font-size: 22px; }
+.touch-notebook small { font-size: 9px; }
+.touch-notebook:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.35); }
+
+@media (hover: none) and (pointer: coarse) {
+  body { -webkit-tap-highlight-color: transparent; }
+  .help, #notebook-open { display: none; }          /* keyboard help → touch controls; Notebook → its big button */
+  .control-row.keys-only, .audio-panel .keys-only { display: none; }   /* explain the touch controls instead */
+  .control-row.touch-only { display: flex; }
+  .audio-panel .touch-only { display: block; }
+  .touch-controls { display: flex; grid-area: pad; }
+  .canvas-stage { grid-area: stage; }
+  .case-panel { grid-area: panel; order: 0; }
+  .interact-prompt { cursor: pointer; }
+  .interact-prompt kbd { pointer-events: none; }
+  #game { touch-action: none; }                       /* no page zoom when a thumb lands on the map */
+  .toast { bottom: auto; top: 76px; max-width: calc(100vw - 32px); text-align: center; }
+  .objective-tip { font-size: 12px; }
+  .game-layout {
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ---- tablet, landscape (e.g. iPad 1080×810) ---- */
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) and (min-height: 501px) {
+  .game-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "stage panel" "pad panel";
+  }
+  .touch-controls { padding: 0 24px; }
+}
+
+/* ---- tablet, portrait (e.g. iPad 810×1080) — also narrow computer windows 601–1024px wide,
+        where the keyboard help sits in the "pad" row instead of the touch controls ---- */
+@media (hover: none) and (pointer: coarse) and (orientation: portrait) and (min-width: 601px),
+       (hover: hover) and (min-width: 601px) and (max-width: 1024px),
+       (pointer: fine) and (min-width: 601px) and (max-width: 1024px) {
+  .game-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    grid-template-areas: "stage" "pad" "panel";
+    align-content: start; overflow-y: auto;
+  }
+  .canvas-stage { container-type: normal; min-height: auto; }
+  .canvas-wrap { width: 100%; height: auto; max-height: none; }
+  .touch-controls { padding: 0 36px; }
+  .dpad { --size: 136px; }
+  /* the panel turns into two columns so it fits under the controls */
+  .case-panel {
+    display: grid; overflow: visible; min-height: auto; gap: 10px 14px; padding: 14px 16px;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-areas:
+      "title  meta"
+      "map    goals"
+      "map    player"
+      "accuse change";
+  }
+  .case-panel > .eyebrow, #panel-description { display: none; }
+  .case-panel h2 { grid-area: title; align-self: center; }
+  .case-meta { grid-area: meta; display: flex; align-items: center; gap: 10px; justify-self: end; }
+  .case-panel > .minimap-card { grid-area: map; min-height: 0; }
+  #minimap { height: 128px; flex: none; }
+  .player-card { padding: 6px 10px; }
+  .player-card canvas { width: 44px; height: 52px; }
+  .objectives { grid-area: goals; }
+  .player-card { grid-area: player; }
+  #accuse-open { grid-area: accuse; margin: 0; }
+  #change-case { grid-area: change; }
+}
+
+/* ---- phones (either way up): compact top bar, case panel in a drawer ---- */
+@media (hover: none) and (pointer: coarse) and (max-width: 600px),
+       (hover: none) and (pointer: coarse) and (max-height: 500px) {
+  .topbar { padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left)); gap: 8px; }
+  .brand > div { display: none; }                     /* the case title is in the drawer */
+  .brand-logo { width: 30px; height: 30px; font-size: 12px; }
+  .stats { gap: 14px; }
+  .stats span { font-size: 8px; }
+  .stats strong { font-size: 14px; }
+  .top-actions { gap: 6px; }
+  .top-button { padding: 7px 11px; font-size: 11.5px; }
+  .top-button.icon-only { padding: 6px 9px; font-size: 14px; }
+  .panel-toggle { display: flex; }
+  .toast { top: 64px; font-size: 12px; padding: 8px 16px; }
+  .objective-tip { font-size: 11px; padding: 5px 12px; top: 8px; }
+  .interact-prompt { bottom: 10px; font-size: 12px; padding: 6px 12px; }
+
+  /* the drawer */
+  .case-panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 35;
+    width: min(340px, 88vw); border-radius: var(--radius) 0 0 var(--radius);
+    padding: 18px 18px max(18px, env(safe-area-inset-bottom));
+    overflow-y: auto; transform: translateX(105%);
+    visibility: hidden;   /* closed = out of the tab order and hidden from screen readers too */
+    transition: transform 0.22s ease, visibility 0s linear 0.22s;
+  }
+  .case-panel > .minimap-card { min-height: 150px; }
+  #panel-description { display: -webkit-box; }
+  .panel-close {
+    display: block; position: absolute; top: 8px; right: 10px; z-index: 1;
+    width: 36px; height: 36px; border: none; background: none; font-size: 26px; color: rgba(28,26,20,0.45);
+  }
+  .panel-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 34; background: rgba(11,19,43,0.6);
+    opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+  }
+  body.panel-open .case-panel { transform: none; visibility: visible; transition: transform 0.22s ease; }
+  body.panel-open .panel-backdrop { opacity: 1; pointer-events: auto; }
+}
+
+/* ---- phone, portrait (e.g. iPhone 390×664) ---- */
+@media (hover: none) and (pointer: coarse) and (max-width: 600px) and (orientation: portrait) {
+  .topbar { flex-wrap: wrap; row-gap: 6px; }
+  .stats { order: 3; width: 100%; justify-content: space-around; padding-top: 6px; border-top: 1px solid rgba(243,236,218,0.1); }
+  .game-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: "stage" "pad";
+    padding-top: 12px;
+  }
+  .canvas-stage { container-type: normal; min-height: auto; }
+  .canvas-wrap { width: 100%; height: auto; max-height: none; }
+  .touch-controls { padding: 0 6px; }
+  .toast { top: auto; bottom: calc(260px + env(safe-area-inset-bottom)); }   /* in the gap between map and controls */
+}
+@media (hover: none) and (pointer: coarse) and (max-width: 380px) and (orientation: portrait) {
+  .dpad { --size: 132px; }
+  .touch-interact { width: 86px; height: 86px; }
+  .touch-notebook { width: 60px; height: 60px; }
+  .top-button { padding: 6px 9px; }
+}
+
+/* ---- phone, landscape (e.g. iPhone 750×342): D-pad | map | buttons ---- */
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+  .game-layout {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "dpad stage actions";
+    padding-top: 8px; padding-bottom: max(8px, env(safe-area-inset-bottom)); gap: 12px;
+  }
+  .touch-controls { display: contents; }
+  .dpad { grid-area: dpad; align-self: end; margin-bottom: 6px; --size: 124px; }
+  .touch-actions { grid-area: actions; flex-direction: column-reverse; align-self: end; margin-bottom: 6px; gap: 10px; }
+  .touch-interact { width: 80px; height: 80px; }
+  .touch-btn b { font-size: 26px; }
+  .touch-notebook { width: 56px; height: 56px; }
+  .touch-notebook b { font-size: 18px; }
+  .touch-notebook small { display: none; }
+  .toast { top: auto; bottom: 14px; }
 }

@@ -222,6 +222,7 @@ check('door width is 76px',
   // 12e. the ไทย ON / ไทย OFF switch
   const toggle = d.getElementById('thai-toggle');
   check('the Thai on/off button exists in the top bar', !!toggle);
+  check('Thai subtitles start OFF', dbg.thaiSubtitlesOn() === false && d.body.classList.contains('th-off') && toggle.textContent === 'ไทย OFF');
   dbg.setThaiSubtitles(false);
   check('turning Thai off adds body.th-off', d.body.classList.contains('th-off') && dbg.thaiSubtitlesOn() === false);
   dbg.setThaiSubtitles(true);

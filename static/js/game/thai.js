@@ -4,7 +4,8 @@
    evidence, quiz prompt / choices / explanation / hint, accusation options,
    confession and solution) a small, faded Thai line is shown as a subtitle.
    The ไทย ON/OFF button (or the T key) hides all of them, for players who
-   want to test themselves. Every new player starts with them ON.
+   want to test themselves. They always start OFF (every page load); the
+   player turns them on when they need help.
 
    The translations are in data/thai-dialogue.js (NPC lines) and
    data/thai-content.js (everything else). A missing translation simply shows
@@ -14,7 +15,7 @@
    Uses from core.js: dom, esc, SND, currentCase. */
 "use strict";
 
-let thaiOn = true;
+let thaiOn = false;
 
 /* A subtitle <span> to put under the English; "" when there is no translation. */
 function thBlock(text, extraClass) {

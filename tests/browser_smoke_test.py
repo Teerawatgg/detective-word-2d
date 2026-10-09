@@ -281,9 +281,14 @@ def quizzes(page):
 
 
 def thai_subtitles(page):
+    check("Thai subtitles start OFF", debug(page, "thaiSubtitlesOn()") is False)
+    check("Thai button reads ไทย OFF", page.inner_text("#thai-toggle").strip() == "ไทย OFF")
     interact_with(page, "npc", "teacher")
     subtitle = page.query_selector(".dialogue-box .dialogue-th")
-    check("NPC dialogue shows a Thai subtitle", subtitle is not None and subtitle.inner_text().strip() != "")
+    check("Thai subtitle is hidden while OFF", subtitle is not None and not subtitle.is_visible())
+    debug(page, "setThaiSubtitles(true)")
+    check("NPC dialogue shows a Thai subtitle once turned ON", subtitle.is_visible() and subtitle.inner_text().strip() != "")
+    debug(page, "setThaiSubtitles(false)")   # back to the default
     close_window(page)
 
 
